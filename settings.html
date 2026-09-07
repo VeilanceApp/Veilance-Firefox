@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Veilance Settings</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-inner">
+      <div class="brand">
+        <img src="assets/icon-48.png" alt="Veilance">
+        <div><strong>Veilance</strong><span>Settings</span></div>
+      </div>
+      <div class="page-tools">
+        <button id="reviewSetupButton" class="header-setup-button" type="button">Review setup</button>
+        <div class="theme-control" role="group" aria-label="Appearance">
+          <button type="button" data-theme-option="system" aria-pressed="true">System</button>
+          <button type="button" data-theme-option="light" aria-pressed="false">Light</button>
+          <button type="button" data-theme-option="dark" aria-pressed="false">Dark</button>
+        </div>
+        <span id="version" class="version"></span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div class="intro-copy">
+        <span class="eyebrow">Privacy settings</span>
+        <h1>Veilance settings</h1>
+        <p>Manage detection, Shield, telemetry, and data stored by this browser.</p>
+      </div>
+      <aside class="local-note" aria-label="Local data notice">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z"></path></svg>
+        <div><strong>Local by default</strong><span>Visits, rules, snapshots, and wallet keys stay in this browser unless you take an explicit action.</span></div>
+      </aside>
+    </section>
+
+    <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+      <button id="settingsTabTrackers" class="settings-tab active" type="button" role="tab" aria-selected="true" aria-controls="settingsPanelTrackers" data-settings-tab="trackers">Trackers</button>
+      <button id="settingsTabIndicators" class="settings-tab" type="button" role="tab" aria-selected="false" aria-controls="settingsPanelIndicators" data-settings-tab="indicators" tabindex="-1">Detection</button>
+      <button id="settingsTabProtections" class="settings-tab" type="button" role="tab" aria-selected="false" aria-controls="settingsPanelProtections" data-settings-tab="protections" tabindex="-1">Shield</button>
+      <button id="settingsTabSnapshots" class="settings-tab" type="button" role="tab" aria-selected="false" aria-controls="settingsPanelSnapshots" data-settings-tab="snapshots" tabindex="-1">Telemetry</button>
+      <button id="settingsTabWallet" class="settings-tab" type="button" role="tab" aria-selected="false" aria-controls="settingsPanelWallet" data-settings-tab="wallet" tabindex="-1">Wallet</button>
+      <button id="settingsTabData" class="settings-tab" type="button" role="tab" aria-selected="false" aria-controls="settingsPanelData" data-settings-tab="data" tabindex="-1">Local data</button>
+    </nav>
+
+    <div id="settingsPanelTrackers" class="settings-tab-panel" role="tabpanel" aria-labelledby="settingsTabTrackers" data-settings-panel="trackers">
+      <section class="settings-card">
+      <header class="card-header">
+        <div>
+          <span class="eyebrow">Tracker database</span>
+          <h2>Managed tracker rules</h2>
+          <p>Bundled rules work immediately. When automatic updates are on, Veilance checks the public database every eight hours. Updates are data-only JSON and cannot execute code.</p>
+        </div>
+        <div class="header-actions tracker-header-actions">
+          <span id="trackerDatabaseStatus" class="count-badge" role="status">Loading…</span>
+          <button id="checkTrackerUpdatesButton" class="primary-button" type="button">Check now</button>
+        </div>
+      </header>
+      <div class="tracker-control-grid">
+        <div class="tracker-control-row">
+          <div>
+            <strong>Enable tracker matching</strong>
+            <p>Compare contacted hostnames with every active rule in the local tracker database.</p>
+          </div>
+          <label class="switch" title="Enable or disable downloaded tracker matching">
+            <input id="trackerDatabaseEnabled" type="checkbox" aria-label="Enable tracker matching">
+            <span aria-hidden="true"></span>
+          </label>
+        </div>
+        <div class="tracker-control-row">
+          <div>
+            <strong>Automatic updates</strong>
+            <p>Check for rule changes every eight hours. A missed check runs when the extension next wakes.</p>
+          </div>
+          <label class="switch" title="Enable or disable automatic tracker updates">
+            <input id="trackerAutoUpdateEnabled" type="checkbox" aria-label="Enable automatic tracker updates">
+            <span aria-hidden="true"></span>
+          </label>
+        </div>
+      </div>
+      <div class="tracker-stats">
+        <div><span>Active trackers</span><strong id="trackerCount">0</strong></div>
+        <div><span>Update schedule</span><strong id="trackerSchedule">Every 8 hours</strong></div>
+        <div><span>Last checked</span><strong id="trackerLastChecked">Not checked yet</strong></div>
+        <div><span>Source revision</span><strong id="trackerRevision">Loading…</strong></div>
+      </div>
+      <div id="trackerUpdateError" class="notice error" hidden></div>
+      <div class="tracker-source-row">
+        <span>Source</span>
+        <a id="trackerRepositoryLink" href="https://github.com/VeilanceApp/Veilance-Tracker-DB" target="_blank" rel="noreferrer">VeilanceApp/Veilance-Tracker-DB</a>
+      </div>
+      <div class="tracker-log-section">
+        <div class="tracker-log-heading">
+          <div><strong>Update log</strong><span>Most recent 50 checks</span></div>
+        </div>
+        <div id="trackerUpdateLog" class="tracker-update-log">
+          <div class="empty-state">No tracker update checks recorded yet.</div>
+        </div>
+      </div>
+      </section>
+    </div>
+
+    <div id="settingsPanelIndicators" class="settings-tab-panel" role="tabpanel" aria-labelledby="settingsTabIndicators" data-settings-panel="indicators" hidden>
+      <section class="settings-card">
+        <header class="card-header">
+          <div>
+            <span class="eyebrow">Detection database</span>
+            <h2>Managed detection fingerprints</h2>
+            <p>Veilance downloads validated JSON detection rules from the public Detection DB. Automatic updates check every eight hours and downloaded rules cannot execute code.</p>
+          </div>
+          <div class="header-actions tracker-header-actions">
+            <span id="detectionDatabaseStatus" class="count-badge" role="status">Loading…</span>
+            <button id="checkDetectionUpdatesButton" class="primary-button" type="button">Check now</button>
+          </div>
+        </header>
+        <div class="tracker-control-grid">
+          <div class="tracker-control-row">
+            <div>
+              <strong>Enable managed detections</strong>
+              <p>Evaluate downloaded detection fingerprints against the privacy signals collected during each visit.</p>
+            </div>
+            <label class="switch" title="Enable or disable downloaded detection matching">
+              <input id="detectionDatabaseEnabled" type="checkbox" aria-label="Enable managed detection matching">
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+          <div class="tracker-control-row">
+            <div>
+              <strong>Automatic updates</strong>
+              <p>Check the Detection DB every eight hours. Existing validated rules remain active if an update fails.</p>
+            </div>
+            <label class="switch" title="Enable or disable automatic detection updates">
+              <input id="detectionAutoUpdateEnabled" type="checkbox" aria-label="Enable automatic detection updates">
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+        <div class="tracker-stats">
+          <div><span>Active detections</span><strong id="detectionCount">0</strong></div>
+          <div><span>Update schedule</span><strong id="detectionSchedule">Every 8 hours</strong></div>
+          <div><span>Last checked</span><strong id="detectionLastChecked">Not checked yet</strong></div>
+          <div><span>Source revision</span><strong id="detectionRevision">Not downloaded</strong></div>
+        </div>
+        <div id="detectionUpdateError" class="notice error" hidden></div>
+        <div class="tracker-source-row">
+          <span>Source</span>
+          <a id="detectionRepositoryLink" href="https://github.com/VeilanceApp/Veilance-Detection-DB" target="_blank" rel="noreferrer">VeilanceApp/Veilance-Detection-DB</a>
+        </div>
+        <div class="tracker-log-section">
+          <div class="tracker-log-heading">
+            <div><strong>Detection update log</strong><span>Most recent 50 checks</span></div>
+          </div>
+          <div id="detectionUpdateLog" class="tracker-update-log">
+            <div class="empty-state">No detection update checks recorded yet.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-card">
+      <header class="card-header">
+        <div>
+          <span class="eyebrow">Detection</span>
+          <h2>Built-in signals</h2>
+          <p>Choose which privacy-relevant browser behaviors Veilance records. Turning a signal off affects new activity only; existing history is unchanged.</p>
+        </div>
+        <div class="header-actions">
+          <span id="enabledCount" class="count-badge">0 enabled</span>
+          <button id="resetIndicatorsButton" class="text-button" type="button">Restore defaults</button>
+        </div>
+      </header>
+      <div id="builtInIndicators" class="indicator-groups">
+        <div class="loading">Loading indicators…</div>
+      </div>
+    </section>
+
+    <section class="settings-card">
+      <header class="card-header">
+        <div>
+          <span class="eyebrow">Custom rules</span>
+          <h2>Import indicators</h2>
+          <p>Select a folder of JSON rules. Veilance reads that selection once, validates each file, and never scans the folder in the background. Imported rules cannot execute code.</p>
+        </div>
+        <button id="chooseFolderButton" class="primary-button" type="button">Choose folder</button>
+        <input id="indicatorFolderInput" type="file" accept=".json,application/json" webkitdirectory multiple hidden>
+      </header>
+      <div id="importStatus" class="notice" hidden></div>
+      <div id="customIndicators" class="custom-list">
+        <div class="empty-state">No custom indicators loaded.</div>
+      </div>
+      <div class="indicator-how-to">
+        <div class="how-to-step">
+          <span>1</span>
+          <div><strong>Create a folder</strong><p>Keep one or more plain <code>.json</code> rule files together.</p></div>
+        </div>
+        <div class="how-to-step">
+          <span>2</span>
+          <div><strong>Choose what to match</strong><p>Use a built-in source ID, an exact API/action, host suffixes, or Veilance network filters inside JSON.</p></div>
+        </div>
+        <div class="how-to-step">
+          <span>3</span>
+          <div><strong>Import and review</strong><p>Select <em>Choose folder</em>. Veilance reports rejected files and unsupported fields.</p></div>
+        </div>
+      </div>
+      <div class="template-actions">
+        <button id="downloadStarterButton" class="secondary-button" type="button">Download starter file</button>
+        <button id="copySignalTemplateButton" class="secondary-button" type="button">Copy signal example</button>
+        <button id="copyHostTemplateButton" class="secondary-button" type="button">Copy host example</button>
+        <button id="copyVeilanceTemplateButton" class="secondary-button" type="button">Copy tracker example</button>
+      </div>
+      <details class="schema-help">
+        <summary>Indicator file format and matching guide</summary>
+        <p>A file may contain one indicator, an array, or an object with an <code>indicators</code> array. The easiest rule matches a built-in source with <code>indicatorId</code>. For a narrower rule, copy the exact <code>API</code> and <code>action</code> shown in Technical details. Keep the matching built-in indicator enabled so its signals are available.</p>
+        <pre>{
+  "id": "repeated-font-probing",
+  "name": "Repeated font probing",
+  "category": "Fingerprinting",
+  "description": "A page used font-probing signals at least ten times.",
+  "severity": "medium",
+  "match": {
+    "indicatorId": "font-probing",
+    "minCount": 10
+  }
+}</pre>
+        <div class="schema-notes">
+          <p><code>signals</code> accepts up to 20 matchers. <code>hosts</code> accepts domain suffixes such as <code>metrics.example</code>. Set <code>mode</code> to <code>any</code> or <code>all</code>. Severity may be <code>low</code>, <code>medium</code>, or <code>high</code>.</p>
+          <p>Custom indicators are matching rules only. They never execute code, read page contents, or add new browser instrumentation.</p>
+        </div>
+      </details>
+      <details class="schema-help">
+        <summary>Veilance JSON tracker format</summary>
+        <p>Veilance tracker files store domains and filters as JSON arrays. Veilance supports host-anchored network filters such as <code>||tracker.example^$3p</code>. <code>$3p</code>, first-party forms, common resource types, and <code>domain=</code> constraints are honored. Path, cosmetic, regular-expression, redirect, and exception filters are skipped with a visible warning because Veilance history intentionally does not retain URL paths.</p>
+        <pre>{
+  "format": "veilance-json",
+  "name": "Platform161",
+  "category": "advertising",
+  "website_url": "https://platform161.com/",
+  "organization": "platform161",
+  "domains": [
+    "creative-serving.com",
+    "p161.net"
+  ],
+  "filters": [
+    "||ads.creative-serving.com^$3p",
+    "||p161.net^$3p"
+  ]
+}</pre>
+        <div class="schema-notes">
+          <p>The <code>format</code> field is recommended but optional when <code>domains</code> or <code>filters</code> is present. The rule name is required. <code>organization</code> becomes the default rule id, and <code>description</code>, <code>severity</code>, and <code>defaultEnabled</code> remain optional. Keep the built-in <code>network-requests</code> indicator enabled so tracker rules have request hosts to evaluate.</p>
+        </div>
+      </details>
+      </section>
+    </div>
+
+    <div id="settingsPanelProtections" class="settings-tab-panel" role="tabpanel" aria-labelledby="settingsTabProtections" data-settings-panel="protections" hidden>
+      <section class="settings-card">
+        <header class="card-header">
+          <div>
+            <span class="eyebrow">Veilance Shield</span>
+            <h2>Control your privacy shield</h2>
+            <p>Veilance Shield changes selected browser signals before a website can use them for tracking. Detection can remain enabled independently so Veilance still records fingerprinting attempts.</p>
+          </div>
+          <span class="network-badge beta-badge">Beta</span>
+        </header>
+        <div class="tracker-control-grid protection-control-grid">
+          <div class="tracker-control-row">
+            <div>
+              <div class="protection-title"><strong>Fingerprint Shield</strong><span class="feature-badge">Beta</span></div>
+              <p>Applies validated Shield DB rules to supported Canvas, font-metric, WebGL, Web Audio, Navigator, and Screen fingerprint surfaces. On by default.</p>
+              <p class="protection-note">After changing this setting, reload open websites so Veilance Shield applies from the start of the page.</p>
+            </div>
+            <label class="switch" title="Enable or disable Fingerprint Shield">
+              <input id="fingerprintProtectionEnabled" type="checkbox" aria-label="Enable Fingerprint Shield">
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+          <div class="tracker-control-row future-feature" aria-disabled="true">
+            <div>
+              <div class="protection-title"><strong>Tracker Shield</strong><span class="feature-badge muted-badge">Coming soon</span></div>
+              <p>Will block known tracking requests before they load. Tracker detection and the local tracker database continue to work normally today.</p>
+            </div>
+            <label class="switch" title="Tracker Shield is coming in a future release">
+              <input id="trackerProtectionEnabled" type="checkbox" aria-label="Tracker Shield coming soon" disabled>
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+        <div class="protection-detail">
+          <strong>Current shield coverage</strong>
+          <p><span id="activeShieldRuleCount">0</span> active data-only rules can farble, normalize, or bucket supported fingerprint values. Detection remains enabled independently so protected attempts still appear in visit activity.</p>
+        </div>
+      </section>
+
+      <section class="settings-card">
+        <header class="card-header">
+          <div>
+            <span class="eyebrow">Shield database</span>
+            <h2>Managed protection rules</h2>
+            <p>Veilance includes an offline starter pack and checks the public Shield DB every eight hours. Downloaded JSON selects only protection strategies already packaged in the extension and cannot execute code.</p>
+          </div>
+          <div class="header-actions tracker-header-actions">
+            <span id="shieldDatabaseStatus" class="count-badge" role="status">Loading…</span>
+            <button id="checkShieldUpdatesButton" class="primary-button" type="button">Check now</button>
+          </div>
+        </header>
+        <div class="tracker-control-grid">
+          <div class="tracker-control-row">
+            <div>
+              <strong>Enable downloaded Shield rules</strong>
+              <p>Allow the Fingerprint Shield master switch to use the validated local rule database.</p>
+            </div>
+            <label class="switch" title="Enable or disable managed Shield rules">
+              <input id="shieldDatabaseEnabled" type="checkbox" aria-label="Enable managed Shield rules">
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+          <div class="tracker-control-row">
+            <div>
+              <strong>Automatic updates</strong>
+              <p>Check the Shield DB every eight hours. The last validated rules remain active if an update fails.</p>
+            </div>
+            <label class="switch" title="Enable or disable automatic Shield updates">
+              <input id="shieldAutoUpdateEnabled" type="checkbox" aria-label="Enable automatic Shield updates">
+              <span aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+        <div class="tracker-stats">
+          <div><span>Downloaded rules</span><strong id="shieldRuleCount">0</strong></div>
+          <div><span>Update schedule</span><strong id="shieldSchedule">Every 8 hours</strong></div>
+          <div><span>Last checked</span><strong id="shieldLastChecked">Not checked yet</strong></div>
+          <div><span>Source revision</span><strong id="shieldRevision">Loading…</strong></div>
+        </div>
+        <div id="shieldUpdateError" class="notice error" hidden></div>
+        <div class="tracker-source-row">
+          <span>Source</span>
+          <a id="shieldRepositoryLink" href="https://github.com/VeilanceApp/Veilance-Shield-DB" target="_blank" rel="noreferrer">VeilanceApp/Veilance-Shield-DB</a>
+        </div>
+        <div class="tracker-log-section">
+          <div class="tracker-log-heading">
+            <div><strong>Shield update log</strong><span>Most recent 50 checks</span></div>
+          </div>
+          <div id="shieldUpdateLog" class="tracker-update-log">
+            <div class="empty-state">No Shield update checks recorded yet.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="settingsPanelSnapshots" class="settings-tab-panel" role="tabpanel" aria-labelledby="settingsTabSnapshots" data-settings-panel="snapshots" hidden>
+      <section class="settings-card snapshot-section">
+      <header class="card-header">
+        <div>
+          <span class="eyebrow">Telemetry</span>
+          <h2>Saved privacy snapshots</h2>
+          <p>Review locally saved, redacted evidence and decide if any of it can be uploaded. Veilance keeps up to 20 snapshots on this device.</p>
+        </div>
+        <span id="snapshotCount" class="count-badge" aria-label="Stored snapshot count">0 / 20</span>
+      </header>
+
+      <div class="snapshot-interest-policy">
+        <div><span>Capture threshold</span><strong>25 / 100</strong></div>
+        <p>High-risk actions add 25 points, medium findings add 10, and low findings add 2. Repeated allowed API activity can add 5–10 points. Routine visits below 25 are never snapshotted.</p>
+      </div>
+
+      <div class="snapshot-privacy-grid">
+        <div>
+          <strong>Included</strong>
+          <p>Website and third-party hostnames, request types, tracker matches, API names/actions and counts, page/security counts, structural ad/consent/anti-blocking markers, script capability hints, and redacted HTML.</p>
+        </div>
+        <div>
+          <strong>Always removed</strong>
+          <p>Page text, URL paths/searches, form values, cookies, storage contents, event-handler attributes, inline script source, device fingerprint values, private/internal hosts, authorization data, and the private wallet key.</p>
+        </div>
+      </div>
+
+      <div class="snapshot-upload-control snapshot-automatic-capture-control">
+        <div>
+          <strong>Save eligible snapshots automatically</strong>
+          <p id="snapshotAutomaticCaptureDescription">Automatic capture is off. Eligible snapshots are saved only when you press Save snapshot.</p>
+          <small>When enabled, Veilance saves one local snapshot per public-site visit after it reaches 25/100 interest. Manual capture in the popup is disabled until you turn this off. This does not enable uploading.</small>
+        </div>
+        <label class="switch" title="Automatically save interest-qualified snapshots">
+          <input id="snapshotAutomaticCapture" type="checkbox" aria-label="Save eligible snapshots automatically" disabled>
+          <span aria-hidden="true"></span>
+        </label>
+      </div>
+
+      <div class="snapshot-upload-control snapshot-upload-consent-control">
+        <div>
+          <strong>Allow pseudonymous snapshot uploads</strong>
+          <p id="snapshotUploadDescription">Checking telemetry upload availability…</p>
+          <small>Each request sends the stable contributor ID as <code>client_id</code>, the generated public Solana address as <code>wallet_address</code>, the exact website hostname—including subdomains—as <code>domain_name</code>, and the public IP address observed by the Veilance API. Paths, queries, fragments, and the private wallet key are never sent.</small>
+        </div>
+        <label class="switch" title="Allow or pause pseudonymous snapshot uploads">
+          <input id="snapshotUploadConsent" type="checkbox" aria-label="Allow pseudonymous snapshot uploads" disabled>
+          <span aria-hidden="true"></span>
+        </label>
+      </div>
+
+      <div class="snapshot-upload-control snapshot-automatic-upload-control">
+        <div>
+          <strong>Upload saved snapshots automatically</strong>
+          <p id="snapshotAutomaticUploadDescription">Allow pseudonymous uploads above to enable automatic queueing.</p>
+          <small>New interest-qualified snapshots use the existing randomized 5–15 minute privacy delay.</small>
+        </div>
+        <label class="switch" title="Automatically queue eligible snapshots">
+          <input id="snapshotAutomaticUpload" type="checkbox" aria-label="Upload eligible snapshots automatically" disabled>
+          <span aria-hidden="true"></span>
+        </label>
+      </div>
+
+      <div class="snapshot-toolbar">
+        <button id="uploadNowButton" class="primary-button" type="button" disabled>Upload now</button>
+        <button id="queueAllSnapshotsButton" class="secondary-button" type="button" disabled>Queue for later</button>
+        <button id="refreshSnapshotsButton" class="secondary-button" type="button">Refresh list</button>
+        <button id="clearSnapshotsButton" class="danger-outline-button" type="button" disabled>Clear snapshots</button>
+      </div>
+      <div id="snapshotList" class="snapshot-list">
+        <div class="empty-state">No interesting telemetry snapshots stored. Veilance enables capture when a public website reaches 25/100 interest.</div>
+      </div>
+      </section>
+    </div>
+
+    <div id="settingsPanelWallet" class="settings-tab-panel" role="tabpanel" aria-labelledby="settingsTabWallet" data-settings-panel="wallet" hidden>
+      <section class="settings-card wallet-section">
+      <header class="card-header">
+        <div>
+          <span class="eyebrow">Wallet &amp; payouts</span>
+          <h2>Local Solana wallet</h2>
+          <p>Back up the wallet generated for this browser and manage future telemetry rewards. Veilance does not upload or sync the keypair.</p>
+        </div>
+        <span class="network-badge">Solana</span>
+      </header>
+      <div class="wallet-address-box">
+        <div>
+          <span>Public address</span>
+          <strong id="walletAddress">Loading wallet…</strong>
+        </div>
+        <button id="copyAddressButton" class="secondary-button" type="button" disabled>Copy address</button>
+      </div>
+      <a id="contributorUuidLink" class="identity-link-box" href="https://veilance.org/leaderboard" target="_blank" rel="noreferrer">
+        <div>
+          <span>Contributor UUID</span>
+          <strong id="contributorUuid">Loading UUID…</strong>
+          <p>Open your position on the Veilance leaderboard.</p>
+        </div>
+        <span class="identity-link-action">View leaderboard →</span>
+      </a>
+      <div class="warning-box">
+        <strong>Back up the private key before using this wallet.</strong>
+        <p>Anyone with the private key controls the wallet. This release stores it in extension-local browser storage without a separate passphrase. Browser-profile loss or extension-data removal can permanently remove the local copy.</p>
+      </div>
+      <div class="wallet-actions">
+        <button id="exportWalletButton" class="danger-outline-button" type="button" disabled>Export private key</button>
+        <button id="settingsPayoutButton" class="disabled-button" type="button" disabled aria-disabled="true">Payout dashboard coming soon</button>
+      </div>
+      </section>
+    </div>
+
+    <div id="settingsPanelData" class="settings-tab-panel" role="tabpanel" aria-labelledby="settingsTabData" data-settings-panel="data" hidden>
+      <section class="settings-card">
+      <header class="card-header">
+        <div>
+          <span class="eyebrow">Local data</span>
+          <h2>Visit history</h2>
+          <p>Complete visit sessions are stored in an on-device SQLite database and automatically limited to the most recent 20.</p>
+        </div>
+      </header>
+      <div class="database-grid">
+        <div><span>Storage engine</span><strong id="databaseEngine">SQLite WASM</strong></div>
+        <div><span>SQLite version</span><strong id="databaseVersion">Loading…</strong></div>
+        <div><span>Visits stored</span><strong id="databaseCount">0 / 20</strong></div>
+        <div><span>Data location</span><strong>This browser only</strong></div>
+      </div>
+      <div class="danger-zone">
+        <div><strong>Clear visit history</strong><p>Deletes all saved visits from this browser. Snapshots and settings are not affected.</p></div>
+        <button id="clearHistoryButton" class="danger-outline-button" type="button">Clear history</button>
+      </div>
+      </section>
+    </div>
+
+    <p id="saveStatus" class="save-status" role="status" aria-live="polite"></p>
+  </main>
+
+  <dialog id="automaticSnapshotWarningDialog" class="wallet-dialog" aria-labelledby="automaticSnapshotWarningTitle">
+    <form method="dialog" class="dialog-content">
+      <span class="eyebrow">Performance notice</span>
+      <h2 id="automaticSnapshotWarningTitle">Automatic snapshots may affect page performance</h2>
+      <p>Veilance scans page structure to create privacy-safe snapshots. Complex websites or several tabs loading simultaneously may experience additional latency. Disable automatic snapshots at any time if browsing feels slower.</p>
+      <div class="dialog-actions dialog-footer">
+        <button class="text-button" type="submit" value="cancel">Cancel</button>
+        <button class="primary-button" type="submit" value="enable">Enable automatic snapshots</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="walletDialog" class="wallet-dialog">
+    <form method="dialog" class="dialog-content">
+      <span class="eyebrow">Private key export</span>
+      <h2>Handle this key like cash.</h2>
+      <p>Veilance will reveal the Solana private key only after you confirm. Never paste it into a website or send it to anyone you do not completely trust.</p>
+      <label class="confirm-row">
+        <input id="privateKeyConfirmation" type="checkbox">
+        <span>I understand that anyone with this key controls the wallet.</span>
+      </label>
+      <div id="privateKeyReveal" hidden>
+        <label for="privateKeyValue">Base58 private key</label>
+        <textarea id="privateKeyValue" rows="4" readonly spellcheck="false"></textarea>
+        <div class="dialog-actions">
+          <button id="copyPrivateKeyButton" class="secondary-button" type="button">Copy private key</button>
+          <button id="downloadKeypairButton" class="secondary-button" type="button">Download Solana keypair</button>
+        </div>
+      </div>
+      <div class="dialog-actions dialog-footer">
+        <button id="cancelWalletExportButton" class="text-button" type="button">Cancel</button>
+        <button id="revealPrivateKeyButton" class="danger-button" type="button" disabled>Reveal private key</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="snapshotDialog" class="snapshot-dialog">
+    <div class="dialog-content">
+      <span class="eyebrow">Redacted snapshot review</span>
+      <h2 id="snapshotDialogTitle">Telemetry snapshot</h2>
+      <p>HTML is shown only as inert text. The snapshot contains evidence for review, not a final determination that a service is a fingerprinter, ad tracker, or anti-blocking system.</p>
+      <pre id="snapshotPreviewMetadata" class="snapshot-preview-metadata"></pre>
+      <label for="snapshotHtmlPreview">Redacted HTML</label>
+      <textarea id="snapshotHtmlPreview" rows="18" readonly spellcheck="false"></textarea>
+      <div class="dialog-actions snapshot-dialog-actions">
+        <button id="downloadSnapshotButton" class="secondary-button" type="button">Download snapshot JSON</button>
+        <button id="downloadSnapshotHtmlButton" class="secondary-button" type="button">Download HTML as text</button>
+        <button id="queueSnapshotButton" class="primary-button" type="button" disabled>Queue upload</button>
+        <button id="closeSnapshotDialogButton" class="text-button" type="button">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="settings.js"></script>
+</body>
+</html>

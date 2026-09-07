@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Veilance</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/icon-48.png" alt="Veilance">
+      <div><strong>Veilance</strong><span>Privacy activity monitor</span></div>
+    </div>
+    <div class="topbar-actions">
+      <button id="themeToggle" class="header-icon-button theme-toggle" type="button" title="Switch appearance" aria-label="Switch appearance">
+        <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.5"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path>
+        </svg>
+        <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.2 15.2A8.5 8.5 0 0 1 8.8 3.8a8.5 8.5 0 1 0 11.4 11.4Z"></path>
+        </svg>
+      </button>
+      <span id="liveState" class="live"><i></i><span>Monitoring</span></span>
+    </div>
+  </header>
+
+  <nav class="navigation" aria-label="Veilance sections">
+    <button class="nav-button active" type="button" data-view="live">Overview</button>
+    <button class="nav-button" type="button" data-view="history">
+      History <span id="historyBadge" class="nav-count">0</span>
+    </button>
+    <button class="nav-button" type="button" data-view="protections">
+      Shielded <span id="protectionBadge" class="nav-count">0</span>
+    </button>
+    <button id="settingsButton" class="nav-button settings-button" type="button" title="Open settings">
+      Settings
+    </button>
+  </nav>
+
+  <main>
+    <section id="setupNotice" class="setup-notice" aria-labelledby="setupNoticeTitle" hidden>
+      <span class="setup-notice-mark" aria-hidden="true">!</span>
+      <div><strong id="setupNoticeTitle">Finish setting up Veilance</strong><p>Review the privacy policy and choose whether to enable automatic telemetry.</p></div>
+      <button id="finishSetupButton" type="button">Open setup</button>
+    </section>
+
+    <section id="liveView" class="view">
+      <section id="unsupportedPage" class="unsupported-page" aria-labelledby="unsupportedTitle" hidden>
+        <div class="unsupported-symbol" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M16 3 6.5 7v8c0 6.1 4 11.1 9.5 14 5.5-2.9 9.5-7.9 9.5-14V7L16 3Z"></path><path d="M11.5 15.5h9M16 11v9"></path></svg>
+        </div>
+        <span id="unsupportedKind" class="unsupported-kicker">Protected browser page</span>
+        <h1 id="unsupportedTitle">Veilance doesn’t support this page</h1>
+        <p id="unsupportedDescription">Browsers do not allow extensions to inspect internal pages. Veilance will resume automatically on a regular website.</p>
+        <div class="unsupported-reassurance">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5.5 5.7v5.5c0 4.2 2.7 7.7 6.5 9.8 3.8-2.1 6.5-5.6 6.5-9.8V5.7L12 3Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          <div><strong>Nothing was collected from this page.</strong><span>Internal pages stay outside Veilance’s observation boundary.</span></div>
+        </div>
+        <div class="unsupported-actions">
+          <button id="unsupportedRetryButton" class="unsupported-primary" type="button">Check again</button>
+          <button id="unsupportedSettingsButton" class="unsupported-secondary" type="button">Open settings</button>
+        </div>
+        <p class="unsupported-footnote">Supported pages use a standard <code>http://</code> or <code>https://</code> address.</p>
+      </section>
+
+      <div id="liveDashboard">
+      <section class="site-card">
+        <div class="site-line">
+          <div>
+            <span class="label">Current site</span>
+            <h1 id="hostname">Checking active tab…</h1>
+          </div>
+          <button id="refreshButton" class="icon-button" type="button" title="Refresh current site" aria-label="Refresh current site">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"></path></svg>
+          </button>
+        </div>
+        <button id="statusPill" class="status quiet" type="button" aria-describedby="statusExplanation" title="Waiting for page activity" disabled>
+          <span id="statusPillText">Waiting for page activity</span>
+        </button>
+        <p id="statusExplanation" class="status-explanation">Veilance is checking this page. Nothing is blocked just because it was observed.</p>
+        <p id="visitTiming" class="visit-timing">Preparing on-device monitoring…</p>
+        <p id="liveMessage" class="inline-message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="activity-panel" aria-labelledby="activityTitle">
+        <div class="activity-heading">
+          <div><span class="label">Simple overview</span><h2 id="activityTitle">What happened here</h2></div>
+        </div>
+        <p class="overview-intro">These are observations, not accusations. A website can contact outside services for normal features as well as advertising or analytics.</p>
+        <div id="activityBreakdown" class="activity-breakdown" aria-live="polite">
+          <div class="activity-loading">Checking page activity…</div>
+        </div>
+        <button id="openReportButton" class="report-button" type="button">
+          <span><strong>Open the privacy report</strong><small>Charts, plain-English explanations, and Shield details</small></span>
+          <span class="report-button-arrow" aria-hidden="true">→</span>
+        </button>
+      </section>
+
+      <details class="more-options">
+        <summary>
+          <span><strong>More options</strong><small>Research snapshots, payouts, and reset</small></span>
+          <span class="more-options-chevron" aria-hidden="true">⌄</span>
+        </summary>
+        <div class="more-options-body">
+          <section class="snapshot-card">
+            <div class="snapshot-card-heading">
+              <div>
+                <span class="label">Contribute to privacy research</span>
+                <strong>Save a redacted snapshot</strong>
+                <p>Veilance removes text, form entries, URL paths, and secrets. Saving stays local unless you separately allow an upload.</p>
+              </div>
+            </div>
+            <div id="snapshotInterest" class="interest-meter routine" role="meter" aria-label="Snapshot eligibility" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="interest-meter-head">
+                <div class="interest-meter-copy">
+                  <span>Snapshot eligibility</span>
+                  <small id="snapshotInterestLabel">25 points until ready</small>
+                </div>
+                <strong><b id="snapshotInterestScore">0</b><span>/100</span></strong>
+              </div>
+              <div class="interest-meter-track" aria-hidden="true"><i></i></div>
+            </div>
+            <button id="snapshotButton" class="snapshot-button" type="button" aria-describedby="snapshotStatus">Save snapshot</button>
+            <p id="snapshotStatus" class="snapshot-status" role="status" aria-live="polite"></p>
+          </section>
+
+          <button id="payoutSettingsButton" class="payout-settings-button" type="button">
+            <span><small>Optional research rewards</small><strong>Wallet &amp; payouts</strong></span>
+            <span class="payout-settings-action">Manage <span aria-hidden="true">→</span></span>
+          </button>
+
+          <button id="clearButton" class="clear-button" type="button" title="Discard the current visit data and begin monitoring again">Reset current visit</button>
+        </div>
+      </details>
+      </div>
+    </section>
+
+    <section id="protectionsView" class="view" hidden>
+      <section class="protection-hero">
+        <div class="protection-hero-main">
+          <div class="protection-hero-copy">
+            <span class="label">Veilance Shield</span>
+            <div class="protection-title-row">
+              <h1>Shielded</h1>
+              <span id="protectionStateBadge" class="protection-state on">On</span>
+            </div>
+          </div>
+          <div class="protection-total">
+            <strong id="protectionTotal">0</strong>
+            <span>shielded</span>
+          </div>
+        </div>
+        <p id="protectionSummary">Veilance Shield is on and protecting supported fingerprint surfaces.</p>
+        <button id="openProtectionSettings" class="protection-settings-button" type="button">Shield settings</button>
+      </section>
+
+      <section class="protection-log-panel">
+        <div class="panel-head">
+          <div><span class="label">This page</span><h2>Shielded activity</h2><p>Click an item to inspect the protected value returned to the website.</p></div>
+          <span id="protectionEventCount" class="count">0 total</span>
+        </div>
+        <div id="protectionEvents" class="protection-events">
+          <div class="empty panel-empty">No supported fingerprint attempts have been shielded on this page.</div>
+        </div>
+      </section>
+
+      <section class="future-protection-card" aria-disabled="true">
+        <div>
+          <span class="feature-kicker">Coming soon</span>
+          <h2>Tracker Shield</h2>
+          <p>Will block known tracking requests before they load.</p>
+        </div>
+        <span class="future-lock">Not available</span>
+      </section>
+    </section>
+
+    <section id="historyView" class="view" hidden>
+      <div id="historyListView">
+        <section class="history-heading">
+          <div>
+            <span class="label">On-device history</span>
+            <h1>Last 20 visits</h1>
+            <p>A visit runs from navigation until you leave or close the page. History never leaves this browser unless you explicitly export it.</p>
+          </div>
+          <button id="historyRefreshButton" class="icon-button" type="button" title="Refresh history" aria-label="Refresh history">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"></path></svg>
+          </button>
+        </section>
+        <div id="historyList" class="history-list">
+          <div class="empty panel-empty">No visits have been recorded yet.</div>
+        </div>
+      </div>
+
+      <div id="historyDetailView" hidden>
+        <button id="historyBackButton" class="back-button" type="button"><span aria-hidden="true">←</span> All visits</button>
+        <div id="historyDetail" class="history-detail"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>Activity stays on this device unless you choose to share a redacted snapshot.</span><span id="version"></span></footer>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

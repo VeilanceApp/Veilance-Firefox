@@ -1,0 +1,4 @@
+.idea/
+*.xpi
+*.zip
+web-ext-artifacts/
