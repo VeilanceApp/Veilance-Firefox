@@ -16,6 +16,7 @@ const outputPath = path.resolve(process.argv[2] || defaultOutput);
 const rootFiles = [
   "LICENSE",
   "background.js",
+  "brand.css",
   "config.js",
   "content.js",
   "injected.js",

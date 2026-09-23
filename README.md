@@ -1,4 +1,4 @@
-# Veilance Browser Extension v0.8 for Firefox
+# Veilance Browser Extension v0.9 for Firefox
 
 Veilance is a local-first browser privacy observability extension. It shows what
 a website requests from browser APIs and which network hosts it contacts while
