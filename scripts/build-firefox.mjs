@@ -24,6 +24,7 @@ const rootFiles = [
   "onboarding.css",
   "onboarding.html",
   "onboarding.js",
+  "plans.html",
   "popup.css",
   "popup.html",
   "popup.js",
@@ -35,7 +36,7 @@ const rootFiles = [
   "settings.html",
   "settings.js"
 ];
-const runtimeDirectories = ["assets", "data", "lib", "vendor"];
+const runtimeDirectories = ["assets", "data", "lib", "vendor", "verity"];
 
 async function filesBelow(directory, prefix = "") {
   const entries = await readdir(directory, { withFileTypes: true });

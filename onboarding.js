@@ -1,3 +1,4 @@
+import { setupAccount } from "./verity/onboarding-account.js";
 import {
   initializeTheme,
   subscribeToTheme,
@@ -54,11 +55,14 @@ function showStep(index) {
   elements.backButton.hidden = currentStep === 0;
   elements.nextButton.textContent = currentStep === steps.length - 1 ? "Finish setup" : "Continue";
   elements.formError.textContent = "";
+  if (currentStep === 1) { elements.nextButton.textContent = setupAccount.user ? "Continue" : "Continue without an account"; void setupAccount.initialize(); }
   document.querySelector(".setup-shell")?.scrollIntoView({ block: "start" });
   steps[currentStep]?.querySelector("h1")?.focus?.({ preventScroll: true });
 }
 
 function validateStep() {
+  if (currentStep === 1 && setupAccount.user && !setupAccount.user.verified) { elements.formError.textContent = "Verify your email, then select ‘I’ve verified — check again’."; return false; }
+  if (setupAccount.busy) { elements.formError.textContent = "Wait for the account request to finish."; return false; }
   if (currentStep === 2 && !elements.privacyAcceptance.checked) {
     elements.formError.textContent = "Accept the Privacy Policy to continue.";
     elements.privacyAcceptance.focus();
@@ -89,7 +93,7 @@ async function completeSetup() {
 
     const response = await send({
       type: "VEILANCE_COMPLETE_ONBOARDING",
-      accountMode: "guest",
+      accountMode: setupAccount.user ? "account" : "guest",
       privacyAccepted: elements.privacyAcceptance.checked,
       telemetryEnabled
     });
@@ -103,6 +107,7 @@ async function completeSetup() {
     elements.stepCounter.textContent = "Setup complete";
     elements.actionBar.hidden = true;
     elements.successStep.hidden = false;
+    document.getElementById("accessSummary").textContent = setupAccount.user ? setupAccount.user.email || "Signed in" : "Without an account";
     elements.telemetrySummary.textContent = response.onboarding?.telemetryEnabled ? "On" : "Off";
     elements.successStep.querySelector("h1")?.focus?.({ preventScroll: true });
   } catch (error) {
@@ -171,3 +176,5 @@ elements.closeSetupButton.addEventListener("click", () => window.close());
 void initializeTheme();
 showStep(0);
 void loadExistingState();
+
+document.addEventListener("veilance:setup-account", () => { if (currentStep === 1) elements.nextButton.textContent = setupAccount.user ? "Continue" : "Continue without an account"; });
